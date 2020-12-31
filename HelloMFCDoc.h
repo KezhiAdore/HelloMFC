@@ -14,8 +14,10 @@ protected: // 仅从序列化创建
 
 // 特性
 public:
-	int m_edge_width;
-	int m_edge_height;
+	int m_edge_top;
+	int m_edge_bottom;
+	int m_edge_left;
+	int m_edge_right;
 	int m_sum_width;
 	int m_sum_height;
 	int m_cell_col;

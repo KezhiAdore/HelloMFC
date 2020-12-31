@@ -5,7 +5,11 @@
 #define IDD_ABOUTBOX				100
 #define IDP_OLE_INIT_FAILED			100
 #define IDR_MAINFRAME				128
-#define IDR_HelloMFCTYPE				130
+#define IDR_HelloMFCTYPE			130
+#define IDB_EDIT_SETROW				200
+#define IDB_EDIT_SETCOL				210
+#define IDB_BUTTON_CONFIRM			220
+
 
 // 新对象的下一组默认值
 //

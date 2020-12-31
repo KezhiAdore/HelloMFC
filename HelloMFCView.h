@@ -14,6 +14,26 @@ protected: // 仅从序列化创建
 // 特性
 public:
 	CHelloMFCDoc* GetDocument() const;
+	CRect clint_rect;
+	CEdit* set_row = NULL;	//设置行数
+	CEdit* set_col = NULL;	//设置列数
+	CButton* confirm=NULL;	//确认按钮
+	CRect row_text;
+	CRect col_text;
+	struct Setting
+	{
+		int top;
+		int bottom;
+		int row_left;
+		int row_right;
+		int col_left;
+		int col_right;
+		int button_left;
+		int button_right;
+		int edge;
+	}setting;
+	
+	
 
 // 操作
 public:
@@ -40,6 +60,9 @@ protected:
 // 生成的消息映射函数
 protected:
 	DECLARE_MESSAGE_MAP()
+public:
+
+	virtual void OnInitialUpdate();
 };
 
 #ifndef _DEBUG  // HelloMFCView.cpp 中的调试版本

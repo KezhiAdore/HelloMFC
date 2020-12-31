@@ -31,13 +31,14 @@ END_MESSAGE_MAP()
 CHelloMFCDoc::CHelloMFCDoc() noexcept
 {
 	// TODO: 在此添加一次性构造代码
-	m_edge_height = 5;
-	m_edge_width = 10;
+	m_edge_top = 50;
+	m_edge_bottom = 5;
+	m_edge_left = 10;
+	m_edge_right = 10;
 	m_sum_height = 250;
 	m_sum_width = 1000;
 	m_cell_col = 8;
 	m_cell_row = 5;
-
 }
 
 CHelloMFCDoc::~CHelloMFCDoc()
