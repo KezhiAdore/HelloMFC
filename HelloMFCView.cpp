@@ -27,6 +27,10 @@ BEGIN_MESSAGE_MAP(CHelloMFCView, CView)
 	ON_COMMAND(ID_FILE_PRINT, &CView::OnFilePrint)
 	ON_COMMAND(ID_FILE_PRINT_DIRECT, &CView::OnFilePrint)
 	ON_COMMAND(ID_FILE_PRINT_PREVIEW, &CView::OnFilePrintPreview)
+	ON_BN_CLICKED(IDB_BUTTON_CONFIRM,&CHelloMFCView::OnButtonConfirm)
+	
+
+	ON_WM_LBUTTONDOWN()
 END_MESSAGE_MAP()
 
 // CHelloMFCView 构造/析构
@@ -48,16 +52,20 @@ CHelloMFCView::CHelloMFCView() noexcept
 	setting.edge = 1;
 	row_text.SetRect(0, setting.top, 100, setting.bottom);
 	col_text.SetRect(200, setting.top, 300, setting.bottom);
+	edit_temp = new CEdit();
+	edit_temp->Create(ES_CENTER | ES_MULTILINE, CRect(0, 0, 0, 0), this, IDB_EDIT_TEMP);
 }
 
 CHelloMFCView::~CHelloMFCView()
 {
-	if (confirm!=NULL)
+	if (confirm != NULL)
 		delete confirm;
-	if (set_col!=NULL)
+	if (set_col != NULL)
 		delete set_col;
 	if (set_row != NULL)
 		delete set_row;
+	if (edit_temp != NULL)
+		delete edit_temp;
 }
 
 BOOL CHelloMFCView::PreCreateWindow(CREATESTRUCT& cs)
@@ -87,15 +95,15 @@ void CHelloMFCView::OnDraw(CDC* pDC)
 	//绘制表格竖线
 	for (int i = 0; i < pDoc->m_cell_col + 1; i++)
 	{
-		pDC->MoveTo(pDoc->m_edge_left + float(i) / pDoc->m_cell_col * pDoc->m_sum_width, pDoc->m_edge_top);
-		pDC->LineTo(pDoc->m_edge_left + float(i) / pDoc->m_cell_col * pDoc->m_sum_width, pDoc->m_edge_top + pDoc->m_sum_height);
+		pDC->MoveTo(pDoc->m_edge_left + i * pDoc->m_sum_width / pDoc->m_cell_col, pDoc->m_edge_top);
+		pDC->LineTo(pDoc->m_edge_left + i * pDoc->m_sum_width / pDoc->m_cell_col, pDoc->m_edge_top + pDoc->m_sum_height);
 	}
 
 	//绘制表格横线
 	for (int i = 0; i < pDoc->m_cell_row + 1; i++)
 	{
-		pDC->MoveTo(pDoc->m_edge_left, pDoc->m_edge_top + float(i) / pDoc->m_cell_row * pDoc->m_sum_height);
-		pDC->LineTo(pDoc->m_edge_left + pDoc->m_sum_width, pDoc->m_edge_top + float(i) / pDoc->m_cell_row * pDoc->m_sum_height);
+		pDC->MoveTo(pDoc->m_edge_left, pDoc->m_edge_top + i * pDoc->m_sum_height / pDoc->m_cell_row);
+		pDC->LineTo(pDoc->m_edge_left + pDoc->m_sum_width, pDoc->m_edge_top + i * pDoc->m_sum_height / pDoc->m_cell_row);
 	}
 
 	//输出设置栏字符“行数设置 列数设置”
@@ -115,7 +123,23 @@ void CHelloMFCView::OnDraw(CDC* pDC)
 	pDC->LineTo(setting.col_right + setting.edge, setting.bottom + setting.edge);
 	pDC->LineTo(setting.col_left - setting.edge, setting.bottom + setting.edge);
 	pDC->LineTo(setting.col_left - setting.edge, setting.top - setting.edge);
-	
+
+	//将数据填入表格中
+	for (int i = 0; i < pDoc->m_cell_row; i++)
+	{
+		for (int j = 0; j < pDoc->m_cell_col; j++)
+		{
+			//将int型数据转化为字符串
+			CString str_show;
+			str_show.Format(_T("%d"), pDoc->data[i * pDoc->m_cell_col + j]);
+			pDC->DrawText(str_show, CRect(
+				pDoc->m_edge_left + j * pDoc->m_sum_width / pDoc->m_cell_col+setting.edge,
+				pDoc->m_edge_top + i * pDoc->m_sum_height / pDoc->m_cell_row+setting.edge,
+				pDoc->m_edge_left + (j + 1) * pDoc->m_sum_width / pDoc->m_cell_col-setting.edge,
+				pDoc->m_edge_top + (i + 1) * pDoc->m_sum_height / pDoc->m_cell_row-setting.edge), 
+				DT_CENTER);
+		}
+	}
 }
 
 
@@ -168,8 +192,10 @@ void CHelloMFCView::OnInitialUpdate()
 	// TODO: 在此添加专用代码和/或调用基类
 
 	//初始化按钮和文本框
-	set_row->Create(ES_LEFT, CRect(setting.row_left,setting.top,setting.row_right,setting.bottom), this, IDB_EDIT_SETROW);
-	set_col->Create(ES_LEFT, CRect(setting.col_left, setting.top, setting.col_right, setting.bottom), this, IDB_EDIT_SETCOL);
+	set_row->Create(ES_CENTER|ES_MULTILINE, CRect(setting.row_left,setting.top,setting.row_right,setting.bottom), this, IDB_EDIT_SETROW);
+	set_col->Create(ES_CENTER, CRect(setting.col_left, setting.top, setting.col_right, setting.bottom), this, IDB_EDIT_SETCOL);
+	set_row->LimitText(2);
+	set_col->LimitText(2);
 	confirm->Create(_T("确认"), BS_PUSHBUTTON, CRect(setting.button_left, setting.top, setting.button_right,setting.bottom), this, IDB_BUTTON_CONFIRM);
 	
 
@@ -178,5 +204,51 @@ void CHelloMFCView::OnInitialUpdate()
 	set_col->ShowWindow(SW_SHOW);
 	confirm->ShowWindow(SW_SHOW);
 	
+}
 
+
+void CHelloMFCView::OnButtonConfirm()
+{
+	// TODO: 在此处添加实现代码.
+
+	//读取文本框中的输入，以字符串形式存储
+	set_row->GetWindowTextW(str_row);
+	set_col->GetWindowTextW(str_col);
+
+	//对Doc中的行列信息数据进行修改
+	CHelloMFCDoc* pDoc = GetDocument();
+	pDoc->m_cell_row = _ttoi(str_row)?_ttoi(str_row):pDoc->m_cell_row;
+	pDoc->m_cell_col = _ttoi(str_col)? _ttoi(str_col):pDoc->m_cell_col;
+
+	//视图刷新显示
+	Invalidate();
+}
+
+
+void CHelloMFCView::OnLButtonDown(UINT nFlags, CPoint point)
+{
+	// TODO: 在此添加消息处理程序代码和/或调用默认值
+
+	CView::OnLButtonDown(nFlags, point);
+	CHelloMFCDoc* pDoc = GetDocument();
+
+	//每次点击相应时先关闭之前的编辑窗口
+	edit_temp->DestroyWindow();
+
+	//若点击出现在表格外则无效
+	if (point.x<pDoc->m_edge_left || point.x>pDoc->m_sum_width + pDoc->m_edge_left)
+		return;
+	if (point.y<pDoc->m_edge_top || point.y>pDoc->m_sum_height + pDoc->m_edge_top)
+		return;
+		
+	//计算点击所在的行和列
+	int col = (point.x - pDoc->m_edge_left) / (pDoc->m_sum_width / pDoc->m_cell_col);
+	int row = (point.y - pDoc->m_edge_top) / (pDoc->m_sum_height / pDoc->m_cell_row);
+
+	//在该单元格处生成编辑框
+	edit_temp->Create(ES_CENTER, CRect(pDoc->m_edge_left + col * pDoc->m_sum_width / pDoc->m_cell_col + setting.edge,
+		pDoc->m_edge_top + row * pDoc->m_sum_height / pDoc->m_cell_row + setting.edge,
+		pDoc->m_edge_left + (col + 1) * pDoc->m_sum_width / pDoc->m_cell_col - setting.edge,
+		pDoc->m_edge_top + (row + 1) * pDoc->m_sum_height / pDoc->m_cell_row - setting.edge),this,IDB_EDIT_TEMP);
+	edit_temp->ShowWindow(SW_SHOW);
 }

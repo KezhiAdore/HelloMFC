@@ -18,8 +18,12 @@ public:
 	CEdit* set_row = NULL;	//设置行数
 	CEdit* set_col = NULL;	//设置列数
 	CButton* confirm=NULL;	//确认按钮
+
+	//屏幕最上方一行字符位置
 	CRect row_text;
 	CRect col_text;
+	
+	//界面最上方空间位置，大小信息
 	struct Setting
 	{
 		int top;
@@ -32,7 +36,13 @@ public:
 		int button_right;
 		int edge;
 	}setting;
-	
+
+	//存放从界面读入的行列信息
+	CString str_row;
+	CString str_col;
+
+	//表格中生成的临时编辑框
+	CEdit* edit_temp = NULL;
 	
 
 // 操作
@@ -63,6 +73,10 @@ protected:
 public:
 
 	virtual void OnInitialUpdate();
+protected:
+	void OnButtonConfirm();
+public:
+	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 };
 
 #ifndef _DEBUG  // HelloMFCView.cpp 中的调试版本

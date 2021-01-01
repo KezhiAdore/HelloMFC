@@ -39,10 +39,13 @@ CHelloMFCDoc::CHelloMFCDoc() noexcept
 	m_sum_width = 1000;
 	m_cell_col = 8;
 	m_cell_row = 5;
+	data = new int[m_cell_row*m_cell_col];
 }
 
 CHelloMFCDoc::~CHelloMFCDoc()
 {
+	if (data != NULL)
+		delete data;
 }
 
 BOOL CHelloMFCDoc::OnNewDocument()

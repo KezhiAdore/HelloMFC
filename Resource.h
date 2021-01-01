@@ -9,6 +9,7 @@
 #define IDB_EDIT_SETROW				200
 #define IDB_EDIT_SETCOL				210
 #define IDB_BUTTON_CONFIRM			220
+#define IDB_EDIT_TEMP				230
 
 
 // 新对象的下一组默认值

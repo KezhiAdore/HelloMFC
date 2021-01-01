@@ -22,6 +22,7 @@ public:
 	int m_sum_height;
 	int m_cell_col;
 	int m_cell_row;
+	int* data=NULL;
 
 // 操作
 public:
