@@ -52,8 +52,8 @@ CHelloMFCView::CHelloMFCView() noexcept
 	setting.edge = 1;
 	row_text.SetRect(0, setting.top, 100, setting.bottom);
 	col_text.SetRect(200, setting.top, 300, setting.bottom);
-	edit_temp = new CEdit();
-	edit_temp->Create(ES_CENTER | ES_MULTILINE, CRect(0, 0, 0, 0), this, IDB_EDIT_TEMP);
+	edit_temp.edit = new CEdit();
+	edit_temp.edit->Create(ES_CENTER | ES_MULTILINE, CRect(0, 0, 0, 0), this, IDB_EDIT_TEMP);
 }
 
 CHelloMFCView::~CHelloMFCView()
@@ -64,8 +64,8 @@ CHelloMFCView::~CHelloMFCView()
 		delete set_col;
 	if (set_row != NULL)
 		delete set_row;
-	if (edit_temp != NULL)
-		delete edit_temp;
+	if (edit_temp.edit != NULL)
+		delete edit_temp.edit;
 }
 
 BOOL CHelloMFCView::PreCreateWindow(CREATESTRUCT& cs)
@@ -232,8 +232,15 @@ void CHelloMFCView::OnLButtonDown(UINT nFlags, CPoint point)
 	CView::OnLButtonDown(nFlags, point);
 	CHelloMFCDoc* pDoc = GetDocument();
 
-	//每次点击相应时先关闭之前的编辑窗口
-	edit_temp->DestroyWindow();
+	//每次点击生成新窗口时：1.将上次的输入写入doc；2.关闭之前的编辑窗口
+	if (edit_temp.flag)
+	{
+		edit_temp.edit->GetWindowTextW(edit_temp.str);
+		pDoc->data[edit_temp.row*pDoc->m_cell_col + edit_temp.col] = _ttoi(edit_temp.str);
+		edit_temp.flag = 0;
+		Invalidate();
+	}
+	edit_temp.edit->DestroyWindow();
 
 	//若点击出现在表格外则无效
 	if (point.x<pDoc->m_edge_left || point.x>pDoc->m_sum_width + pDoc->m_edge_left)
@@ -242,13 +249,21 @@ void CHelloMFCView::OnLButtonDown(UINT nFlags, CPoint point)
 		return;
 		
 	//计算点击所在的行和列
-	int col = (point.x - pDoc->m_edge_left) / (pDoc->m_sum_width / pDoc->m_cell_col);
-	int row = (point.y - pDoc->m_edge_top) / (pDoc->m_sum_height / pDoc->m_cell_row);
+	edit_temp.col = (point.x - pDoc->m_edge_left) / (pDoc->m_sum_width / pDoc->m_cell_col);
+	edit_temp.row = (point.y - pDoc->m_edge_top) / (pDoc->m_sum_height / pDoc->m_cell_row);
 
 	//在该单元格处生成编辑框
-	edit_temp->Create(ES_CENTER, CRect(pDoc->m_edge_left + col * pDoc->m_sum_width / pDoc->m_cell_col + setting.edge,
-		pDoc->m_edge_top + row * pDoc->m_sum_height / pDoc->m_cell_row + setting.edge,
-		pDoc->m_edge_left + (col + 1) * pDoc->m_sum_width / pDoc->m_cell_col - setting.edge,
-		pDoc->m_edge_top + (row + 1) * pDoc->m_sum_height / pDoc->m_cell_row - setting.edge),this,IDB_EDIT_TEMP);
-	edit_temp->ShowWindow(SW_SHOW);
+	edit_temp.edit->Create(ES_CENTER, CRect(pDoc->m_edge_left + edit_temp.col * pDoc->m_sum_width / pDoc->m_cell_col + setting.edge,
+		pDoc->m_edge_top + edit_temp.row * pDoc->m_sum_height / pDoc->m_cell_row + setting.edge,
+		pDoc->m_edge_left + (edit_temp.col + 1) * pDoc->m_sum_width / pDoc->m_cell_col - setting.edge,
+		pDoc->m_edge_top + (edit_temp.row + 1) * pDoc->m_sum_height / pDoc->m_cell_row - setting.edge),this,IDB_EDIT_TEMP);
+	//读取该单元格的int类型数据转化为字符串以便于显示
+	edit_temp.str.Format(_T("%d"), pDoc->data[edit_temp.row*pDoc->m_cell_col + edit_temp.col]);
+	//将该单元格的数据显示在编辑框中
+	edit_temp.edit->SetWindowTextW(edit_temp.str);
+	//选中所有的字符串以方便编辑
+	edit_temp.edit->SetFocus();
+	edit_temp.edit->SetSel(0, -1);
+	edit_temp.edit->ShowWindow(SW_SHOW);
+	edit_temp.flag = 1;
 }

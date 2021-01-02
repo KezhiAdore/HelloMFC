@@ -42,7 +42,14 @@ public:
 	CString str_col;
 
 	//表格中生成的临时编辑框
-	CEdit* edit_temp = NULL;
+	struct Edit
+	{
+		CEdit* edit = NULL;
+		CString str;
+		bool flag=0;
+		int row;
+		int col;
+	}edit_temp;
 	
 
 // 操作

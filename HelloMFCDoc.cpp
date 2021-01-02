@@ -40,6 +40,8 @@ CHelloMFCDoc::CHelloMFCDoc() noexcept
 	m_cell_col = 8;
 	m_cell_row = 5;
 	data = new int[m_cell_row*m_cell_col];
+	for (int i = 0; i < m_cell_row*m_cell_col; i++)
+		data[i] = i;
 }
 
 CHelloMFCDoc::~CHelloMFCDoc()
