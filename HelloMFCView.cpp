@@ -236,11 +236,18 @@ void CHelloMFCView::OnLButtonDown(UINT nFlags, CPoint point)
 	if (edit_temp.flag)
 	{
 		edit_temp.edit->GetWindowTextW(edit_temp.str);
-		pDoc->data[edit_temp.row*pDoc->m_cell_col + edit_temp.col] = _ttoi(edit_temp.str);
-		edit_temp.flag = 0;
-		Invalidate();
+		//判断输入是否合法
+		if (_ttoi(edit_temp.str) == 0 && edit_temp.str.Compare(_T("0")))
+			MessageBox(_T("error:请输入数字"));
+		else
+		{
+			pDoc->data[edit_temp.row * pDoc->m_cell_col + edit_temp.col] = _ttoi(edit_temp.str);
+			edit_temp.flag = 0;
+			//Invalidate();
+		}
 	}
 	edit_temp.edit->DestroyWindow();
+	Invalidate();
 
 	//若点击出现在表格外则无效
 	if (point.x<pDoc->m_edge_left || point.x>pDoc->m_sum_width + pDoc->m_edge_left)
@@ -257,11 +264,14 @@ void CHelloMFCView::OnLButtonDown(UINT nFlags, CPoint point)
 		pDoc->m_edge_top + edit_temp.row * pDoc->m_sum_height / pDoc->m_cell_row + setting.edge,
 		pDoc->m_edge_left + (edit_temp.col + 1) * pDoc->m_sum_width / pDoc->m_cell_col - setting.edge,
 		pDoc->m_edge_top + (edit_temp.row + 1) * pDoc->m_sum_height / pDoc->m_cell_row - setting.edge),this,IDB_EDIT_TEMP);
+
 	//读取该单元格的int类型数据转化为字符串以便于显示
 	edit_temp.str.Format(_T("%d"), pDoc->data[edit_temp.row*pDoc->m_cell_col + edit_temp.col]);
+
 	//将该单元格的数据显示在编辑框中
 	edit_temp.edit->SetWindowTextW(edit_temp.str);
-	//选中所有的字符串以方便编辑
+
+	//选中所有的字符串以便于编辑
 	edit_temp.edit->SetFocus();
 	edit_temp.edit->SetSel(0, -1);
 	edit_temp.edit->ShowWindow(SW_SHOW);
