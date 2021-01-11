@@ -31,23 +31,22 @@ END_MESSAGE_MAP()
 CHelloMFCDoc::CHelloMFCDoc() noexcept
 {
 	// TODO: 在此添加一次性构造代码
-	m_edge_top = 50;
-	m_edge_bottom = 5;
-	m_edge_left = 10;
-	m_edge_right = 10;
-	m_sum_height = 250;
-	m_sum_width = 1000;
-	m_cell_col = 8;
-	m_cell_row = 5;
-	data = new int[m_cell_row*m_cell_col];
-	for (int i = 0; i < m_cell_row*m_cell_col; i++)
-		data[i] = i;
+	m_edge_top = 50;	//表格顶部间隙
+	m_edge_bottom = 5;	//表格底部间隙
+	m_edge_left = 10;	//表格左边间隙
+	m_edge_right = 10;	//表格右边间隙
+	m_sum_height = 250;	//表格总高度（任意）
+	m_sum_width = 1000;	//表格总宽度（任意）
+	m_cell_col = 8;	//表格列数（初始）
+	m_cell_row = 5;	//表格行数（初始）
+	data.resize(m_cell_row);	//表格数据（vector二维数组，可动态扩容）
+	for (int i = 0; i < m_cell_row; i++)
+		data[i].resize(m_cell_col);
 }
 
 CHelloMFCDoc::~CHelloMFCDoc()
 {
-	if (data != NULL)
-		delete data;
+	
 }
 
 BOOL CHelloMFCDoc::OnNewDocument()

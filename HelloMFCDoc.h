@@ -4,6 +4,7 @@
 
 
 #pragma once
+#include <vector>
 
 
 class CHelloMFCDoc : public CDocument
@@ -22,7 +23,7 @@ public:
 	int m_sum_height;
 	int m_cell_col;
 	int m_cell_row;
-	int* data=NULL;
+	std::vector<std::vector<int>> data;
 
 // 操作
 public:

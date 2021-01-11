@@ -41,23 +41,24 @@ CHelloMFCView::CHelloMFCView() noexcept
 	confirm = new CButton();
 	set_col = new CEdit();
 	set_row = new CEdit();
-	setting.top = 10;
-	setting.bottom = 40;
-	setting.row_left = 100;
-	setting.row_right = 200;
-	setting.col_left = 300;
-	setting.col_right = 400;
-	setting.button_left = 450;
-	setting.button_right = 500;
-	setting.edge = 1;
-	row_text.SetRect(0, setting.top, 100, setting.bottom);
-	col_text.SetRect(200, setting.top, 300, setting.bottom);
-	edit_temp.edit = new CEdit();
+	setting.top = 10;	//顶部设置栏顶部间隙
+	setting.bottom = 40;	//顶部设置栏底部间隙
+	setting.row_left = 100;	//行输入框左x坐标
+	setting.row_right = 200;	//行输入框右x坐标
+	setting.col_left = 300;	//列输入框左x坐标
+	setting.col_right = 400;	//列输入框右x坐标
+	setting.button_left = 450;	//确认按钮左x坐标
+	setting.button_right = 500;	//确认按钮右x坐标
+	setting.edge = 1;	//编辑框和边框的间距
+	row_text.SetRect(0, setting.top, 100, setting.bottom);	//行编辑框的CRect
+	col_text.SetRect(200, setting.top, 300, setting.bottom);	//列编辑框的CRect
+	edit_temp.edit = new CEdit();	//编辑表格中内容时产生的临时编辑框
 	edit_temp.edit->Create(ES_CENTER | ES_MULTILINE, CRect(0, 0, 0, 0), this, IDB_EDIT_TEMP);
 }
 
 CHelloMFCView::~CHelloMFCView()
 {
+	//销毁 new 动态分配的空间
 	if (confirm != NULL)
 		delete confirm;
 	if (set_col != NULL)
@@ -124,14 +125,16 @@ void CHelloMFCView::OnDraw(CDC* pDC)
 	pDC->LineTo(setting.col_left - setting.edge, setting.bottom + setting.edge);
 	pDC->LineTo(setting.col_left - setting.edge, setting.top - setting.edge);
 
-	//将数据填入表格中
+	//将表数据填入表格中
 	for (int i = 0; i < pDoc->m_cell_row; i++)
 	{
 		for (int j = 0; j < pDoc->m_cell_col; j++)
 		{
-			//将int型数据转化为字符串
+			//将data数组中存储的int型数据转化为字符串
 			CString str_show;
-			str_show.Format(_T("%d"), pDoc->data[i * pDoc->m_cell_col + j]);
+			str_show.Format(_T("%d"), pDoc->data[i][j]);
+
+			//在表格中居中绘制文本
 			pDC->DrawText(str_show, CRect(
 				pDoc->m_edge_left + j * pDoc->m_sum_width / pDoc->m_cell_col+setting.edge,
 				pDoc->m_edge_top + i * pDoc->m_sum_height / pDoc->m_cell_row+setting.edge,
@@ -220,6 +223,33 @@ void CHelloMFCView::OnButtonConfirm()
 	pDoc->m_cell_row = _ttoi(str_row)?_ttoi(str_row):pDoc->m_cell_row;
 	pDoc->m_cell_col = _ttoi(str_col)? _ttoi(str_col):pDoc->m_cell_col;
 
+	//若有编辑框则将其关闭
+	if (edit_temp.flag)
+	{
+		edit_temp.edit->GetWindowTextW(edit_temp.str);
+		//判断输入是否合法
+		if (_ttoi(edit_temp.str) == 0 && edit_temp.str.Compare(_T("0")))
+			MessageBox(_T("error:请输入数字"));
+		else
+		{
+			//若合法则将数据写入表数据中
+			pDoc->data[edit_temp.row][edit_temp.col] = _ttoi(edit_temp.str);
+			edit_temp.flag = 0;
+		}
+		//关闭临时编辑框
+		edit_temp.edit->DestroyWindow();
+	}
+
+	//若行列超出当前数组大小，则对数组进行扩容
+	//获取当前大小和改变之后大小的最大值
+	int max_row = max(pDoc->m_cell_row, pDoc->data.size());
+	int max_col = max(pDoc->m_cell_col, pDoc->data[0].size());
+	
+	//对数组进行扩容
+	pDoc->data.resize(max_row);
+	for (int i = 0; i < max_row; i++)
+		pDoc->data[i].resize(max_col);
+
 	//视图刷新显示
 	Invalidate();
 }
@@ -241,7 +271,8 @@ void CHelloMFCView::OnLButtonDown(UINT nFlags, CPoint point)
 			MessageBox(_T("error:请输入数字"));
 		else
 		{
-			pDoc->data[edit_temp.row * pDoc->m_cell_col + edit_temp.col] = _ttoi(edit_temp.str);
+			//若合法则将数据写入表数据中
+			pDoc->data[edit_temp.row][edit_temp.col] = _ttoi(edit_temp.str);
 			edit_temp.flag = 0;
 			//Invalidate();
 		}
@@ -266,7 +297,7 @@ void CHelloMFCView::OnLButtonDown(UINT nFlags, CPoint point)
 		pDoc->m_edge_top + (edit_temp.row + 1) * pDoc->m_sum_height / pDoc->m_cell_row - setting.edge),this,IDB_EDIT_TEMP);
 
 	//读取该单元格的int类型数据转化为字符串以便于显示
-	edit_temp.str.Format(_T("%d"), pDoc->data[edit_temp.row*pDoc->m_cell_col + edit_temp.col]);
+	edit_temp.str.Format(_T("%d"), pDoc->data[edit_temp.row][edit_temp.col]);
 
 	//将该单元格的数据显示在编辑框中
 	edit_temp.edit->SetWindowTextW(edit_temp.str);
