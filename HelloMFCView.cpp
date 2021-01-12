@@ -86,8 +86,6 @@ void CHelloMFCView::OnDraw(CDC* pDC)
 	if (!pDoc)
 		return;
 
-	// TODO: 在此处为本机数据添加绘制代码
-
 	//获取当前窗口大小
 	GetClientRect(&clint_rect);
 	pDoc->m_sum_width = clint_rect.right - (pDoc->m_edge_right + pDoc->m_edge_left);
@@ -140,7 +138,7 @@ void CHelloMFCView::OnDraw(CDC* pDC)
 				pDoc->m_edge_top + i * pDoc->m_sum_height / pDoc->m_cell_row+setting.edge,
 				pDoc->m_edge_left + (j + 1) * pDoc->m_sum_width / pDoc->m_cell_col-setting.edge,
 				pDoc->m_edge_top + (i + 1) * pDoc->m_sum_height / pDoc->m_cell_row-setting.edge), 
-				DT_CENTER);
+				DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 		}
 	}
 }
@@ -192,8 +190,6 @@ void CHelloMFCView::OnInitialUpdate()
 {
 	CView::OnInitialUpdate();
 
-	// TODO: 在此添加专用代码和/或调用基类
-
 	//初始化按钮和文本框
 	set_row->Create(ES_CENTER|ES_MULTILINE, CRect(setting.row_left,setting.top,setting.row_right,setting.bottom), this, IDB_EDIT_SETROW);
 	set_col->Create(ES_CENTER, CRect(setting.col_left, setting.top, setting.col_right, setting.bottom), this, IDB_EDIT_SETCOL);
@@ -212,7 +208,6 @@ void CHelloMFCView::OnInitialUpdate()
 
 void CHelloMFCView::OnButtonConfirm()
 {
-	// TODO: 在此处添加实现代码.
 
 	//读取文本框中的输入，以字符串形式存储
 	set_row->GetWindowTextW(str_row);
@@ -257,7 +252,6 @@ void CHelloMFCView::OnButtonConfirm()
 
 void CHelloMFCView::OnLButtonDown(UINT nFlags, CPoint point)
 {
-	// TODO: 在此添加消息处理程序代码和/或调用默认值
 
 	CView::OnLButtonDown(nFlags, point);
 	CHelloMFCDoc* pDoc = GetDocument();
@@ -290,11 +284,14 @@ void CHelloMFCView::OnLButtonDown(UINT nFlags, CPoint point)
 	edit_temp.col = (point.x - pDoc->m_edge_left) / (pDoc->m_sum_width / pDoc->m_cell_col);
 	edit_temp.row = (point.y - pDoc->m_edge_top) / (pDoc->m_sum_height / pDoc->m_cell_row);
 
+	//计算编辑框所在竖直中点
+
+	int edit_center = (pDoc->m_edge_top + edit_temp.row * pDoc->m_sum_height / pDoc->m_cell_row + pDoc->m_edge_top + (edit_temp.row + 1) * pDoc->m_sum_height / pDoc->m_cell_row - setting.edge) / 2;
 	//在该单元格处生成编辑框
-	edit_temp.edit->Create(ES_CENTER, CRect(pDoc->m_edge_left + edit_temp.col * pDoc->m_sum_width / pDoc->m_cell_col + setting.edge,
-		pDoc->m_edge_top + edit_temp.row * pDoc->m_sum_height / pDoc->m_cell_row + setting.edge,
+	edit_temp.edit->Create(ES_AUTOHSCROLL | ES_CENTER | ES_MULTILINE, CRect(pDoc->m_edge_left + edit_temp.col * pDoc->m_sum_width / pDoc->m_cell_col + setting.edge,
+		edit_center - 10,
 		pDoc->m_edge_left + (edit_temp.col + 1) * pDoc->m_sum_width / pDoc->m_cell_col - setting.edge,
-		pDoc->m_edge_top + (edit_temp.row + 1) * pDoc->m_sum_height / pDoc->m_cell_row - setting.edge),this,IDB_EDIT_TEMP);
+		edit_center + 10), this, IDB_EDIT_TEMP);
 
 	//读取该单元格的int类型数据转化为字符串以便于显示
 	edit_temp.str.Format(_T("%d"), pDoc->data[edit_temp.row][edit_temp.col]);
@@ -307,4 +304,62 @@ void CHelloMFCView::OnLButtonDown(UINT nFlags, CPoint point)
 	edit_temp.edit->SetSel(0, -1);
 	edit_temp.edit->ShowWindow(SW_SHOW);
 	edit_temp.flag = 1;
+}
+
+
+//重写打印函数
+void CHelloMFCView::OnPrint(CDC* pDC, CPrintInfo* pInfo)
+{
+	// TODO: 在此添加专用代码和/或调用基类
+	//CView::OnPrint(pDC, pInfo);
+
+	CHelloMFCDoc* pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+	if (!pDoc)
+		return;
+
+	//获取打印页面的水平和竖直像素值
+	int page_width = pDC->GetDeviceCaps(HORZRES);
+	int page_height = pDC->GetDeviceCaps(VERTRES);
+	
+	//规定页边距
+	int page_edge = 10;
+
+	//计算表格水平宽度
+	int tab_width = page_width - 2 * page_edge;
+	//计算表格竖直长度
+	int tab_height = (page_height - 2 * page_edge) / 20 * pDoc->m_cell_row;
+	
+	//在打印机中重新绘制表格竖线
+	for (int i = 0; i < pDoc->m_cell_col + 1; i++)
+	{
+		pDC->MoveTo(page_edge + i * tab_width / pDoc->m_cell_col, page_edge);
+		pDC->LineTo(page_edge + i * tab_width / pDoc->m_cell_col, page_edge + tab_height);
+	}
+
+	//重新绘制表格横线
+	for (int i = 0; i < pDoc->m_cell_row + 1; i++)
+	{
+		pDC->MoveTo(page_edge, page_edge + i * tab_height / pDoc->m_cell_row);
+		pDC->LineTo(page_edge + tab_width, page_edge + i * tab_height / pDoc->m_cell_row);
+	}
+
+	//将表数据填入表格中
+	for (int i = 0; i < pDoc->m_cell_row; i++)
+	{
+		for (int j = 0; j < pDoc->m_cell_col; j++)
+		{
+			//将data数组中存储的int型数据转化为字符串
+			CString str_show;
+			str_show.Format(_T("%d"), pDoc->data[i][j]);
+
+			//在表格中居中绘制文本
+			pDC->DrawText(str_show, CRect(
+				page_edge + j * tab_width / pDoc->m_cell_col + setting.edge * 5,
+				page_edge + i * tab_height / pDoc->m_cell_row + setting.edge * 5,
+				page_edge + (j + 1) * tab_width / pDoc->m_cell_col - setting.edge * 5,
+				page_edge + (i + 1) * tab_height / pDoc->m_cell_row - setting.edge * 5),
+				DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+		}
+	}
 }

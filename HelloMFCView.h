@@ -84,6 +84,7 @@ protected:
 	void OnButtonConfirm();
 public:
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+	virtual void OnPrint(CDC* pDC, CPrintInfo* pInfo);
 };
 
 #ifndef _DEBUG  // HelloMFCView.cpp 中的调试版本
